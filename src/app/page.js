@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import JSZip from "jszip";
-import ID3Writer from "browser-id3-writer";
 
 // ---------- helpers ----------
 async function loadImageBitmap(file) {
@@ -74,14 +72,24 @@ export default function Home() {
   const [results, setResults] = useState([]);
 
   const ffmpegRef = useRef(null);
+  const JSZipRef = useRef(null);
+  const ID3WriterRef = useRef(null);
 
-  // ✅ โหลด ffmpeg เฉพาะ client
+  // ✅ โหลด libs เฉพาะ client
   useEffect(() => {
-    async function loadFFmpeg() {
-      const { FFmpeg } = await import("@ffmpeg/ffmpeg");
-      ffmpegRef.current = new FFmpeg();
+    async function loadLibs() {
+      if (typeof window !== "undefined") {
+        const { FFmpeg } = await import("@ffmpeg/ffmpeg");
+        ffmpegRef.current = new FFmpeg();
+
+        const JSZip = (await import("jszip")).default;
+        JSZipRef.current = JSZip;
+
+        const ID3Writer = (await import("browser-id3-writer")).default;
+        ID3WriterRef.current = ID3Writer;
+      }
     }
-    loadFFmpeg();
+    loadLibs();
   }, []);
 
   function handleChange(e) {
@@ -121,6 +129,7 @@ export default function Home() {
 
   async function processAudios(auds) {
     const ffmpeg = ffmpegRef.current;
+    if (!ffmpeg) throw new Error("FFmpeg not loaded");
     if (!ffmpeg.loaded) {
       setStatus("Loading ffmpeg...");
       await ffmpeg.load();
@@ -168,6 +177,8 @@ export default function Home() {
   }
 
   async function downloadZip() {
+    const JSZip = JSZipRef.current;
+    if (!JSZip) return alert("JSZip not loaded");
     const zip = new JSZip();
     results.forEach(r => zip.file(r.name, r.blob));
     const content = await zip.generateAsync({ type: "blob" });
