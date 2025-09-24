@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { FFmpeg } from "@ffmpeg/ffmpeg";
 import JSZip from "jszip";
 import ID3Writer from "browser-id3-writer";
 
@@ -76,8 +75,13 @@ export default function Home() {
 
   const ffmpegRef = useRef(null);
 
+  // ✅ โหลด ffmpeg เฉพาะ client
   useEffect(() => {
-    ffmpegRef.current = new FFmpeg();
+    async function loadFFmpeg() {
+      const { FFmpeg } = await import("@ffmpeg/ffmpeg");
+      ffmpegRef.current = new FFmpeg();
+    }
+    loadFFmpeg();
   }, []);
 
   function handleChange(e) {
