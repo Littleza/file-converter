@@ -1,0 +1,7 @@
+{
+  "build": {
+    "env": {
+      "NEXT_FORCE_WEBPACK_BUILD": "1"
+    }
+  }
+}
